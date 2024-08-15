@@ -1,0 +1,70 @@
+<div class="slidecontainer">
+    Speed:
+    <input type="range" min="1" max="10" value="5" class="slider" id="slider">
+    <button id="pauseBtn" onclick="pauseSim()">Pause</button>
+</div>
+<br/>
+<div>
+    <input type="text" id="ballsNum" placeholder="balls number">
+
+    <input type="text" id="radius" placeholder="radius">
+
+    <input type="text" id="height" placeholder="height">
+
+    <button id="start"  onclick="start()">Init</button>
+    <button id="start"  onclick="addBall()">Add Ball</button>
+</div>
+
+<div>
+    Score: <label type="text" id="score">0</label>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+    window.pause = false;
+
+    (function() {
+        const canvas = document.getElementById('canvas');
+        context = canvas.getContext('2d');
+
+        window.addEventListener('resize', resizeCanvas, false);
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth-40;
+            canvas.height = window.innerHeight-100;
+        }
+
+        resizeCanvas();
+    })();
+
+    function pauseSim() {
+        window.pause = !window.pause;
+        const btn = document.getElementById('pauseBtn');
+            if (window.pause) {
+                btn.innerText = 'Play';
+            } else {
+                btn.innerText = 'Pause';
+            }
+    }
+
+    function start() {
+        const num = parseInt(document.getElementById('ballsNum').value);
+        const radius = parseInt(document.getElementById('radius').value);
+        const height = parseInt(document.getElementById('height').value);
+        
+        // console.log(num, radius, height)
+        window.restart = true;
+        window.params = {num : (num ? num : 10), radius: (radius? radius: -1), height: (height? height: -1)}
+    }
+
+    function addBall() {
+        window.add = true;
+    }
+
+</script>
+
+<script src="../oldIndex.js"></script>
+<!-- <script src="../oldIndex.js"></script> -->
+
+<!-- <script type="text/javascript" src="../oldIndex.js"></script> -->
