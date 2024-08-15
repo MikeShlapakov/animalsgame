@@ -34,7 +34,6 @@ window.addEventListener('mousedown', (event) => {
 window.addEventListener('touchstart', function(e) {
     isFingerDown = true;
     fingerPressed = true;
-    objects.push(createCircle());
 });
 
 // // Detect when the touch moves
@@ -258,14 +257,11 @@ function createCircle(x = 0, y = 0, r=0) {
     if (x && y && r){
         return new Circle(x, y, r, r);
     }
-    // r = window.params.radius == -1 ? randomInt(20, 90) : window.params.radius;
-    // x = randomInt(container.left + r + 1, container.right - r - 1);
-    // // console.log(x);
-    // y = window.params.height == -1 ? randomInt(r + 1, canvas.height - r - 1) : window.params.height;
-    r = 20;
+    r = window.params.radius == -1 ? randomInt(20, 90) : window.params.radius;
     x = randomInt(container.left + r + 1, container.right - r - 1);
     // console.log(x);
-    y = randomInt(container.top + 50 + r + 1, container.bottom - r - 1);
+    y = window.params.height == -1 ? randomInt(r + 1, canvas.height - r - 1) : window.params.height;
+    
     return new Circle(x, y, r, r);
 }
 
