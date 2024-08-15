@@ -4,7 +4,7 @@
     <button id="pauseBtn" onclick="pauseSim()">Pause</button>
 </div>
 <br/>
-<div>
+<!-- <div>
     <input type="text" id="ballsNum" placeholder="balls number">
 
     <input type="text" id="radius" placeholder="radius">
@@ -13,11 +13,11 @@
 
     <button id="start"  onclick="start()">Init</button>
     <button id="start"  onclick="addBall()">Add Ball</button>
-</div>
+</div> -->
 
-<div>
+<!-- <div>
     Score: <label type="text" id="score">0</label>
-</div>
+</div> -->
 
 <canvas id="canvas"></canvas>
 
@@ -31,8 +31,8 @@
         window.addEventListener('resize', resizeCanvas, false);
 
         function resizeCanvas() {
-            canvas.width = window.innerWidth-40;
-            canvas.height = window.innerHeight-100;
+            canvas.width = window.innerWidth-20;
+            canvas.height = window.innerHeight-60;
         }
 
         resizeCanvas();
@@ -48,19 +48,19 @@
             }
     }
 
-    function start() {
-        const num = parseInt(document.getElementById('ballsNum').value);
-        const radius = parseInt(document.getElementById('radius').value);
-        const height = parseInt(document.getElementById('height').value);
+    // function start() {
+    //     const num = parseInt(document.getElementById('ballsNum').value);
+    //     const radius = parseInt(document.getElementById('radius').value);
+    //     const height = parseInt(document.getElementById('height').value);
         
-        // console.log(num, radius, height)
-        window.restart = true;
-        window.params = {num : (num ? num : 10), radius: (radius? radius: -1), height: (height? height: -1)}
-    }
+    //     // console.log(num, radius, height)
+    //     window.restart = true;
+    //     window.params = {num : (num ? num : 10), radius: (radius? radius: -1), height: (height? height: -1)}
+    // }
 
-    function addBall() {
-        window.add = true;
-    }
+    // function addBall() {
+    //     window.add = true;
+    // }
 
 </script>
 
