@@ -19,6 +19,8 @@ const container = {top: 0, bottom: 0.75* canvas.height, left: 0.15*canvas.width,
 let newBallLaunched = true; 
 let mousePosition = { x: 0, y: 0 };
 let isMouseDown = false;
+let isFingerDown = false;
+let fingerPressed = false;
 
 // Add event listeners
 window.addEventListener('mousedown', (event) => {
@@ -27,6 +29,21 @@ window.addEventListener('mousedown', (event) => {
     // updateMousePosition(event);
     
   }
+});
+
+window.addEventListener('touchstart', function(e) {
+    isFingerDown = true;
+    fingerPressed = true;
+});
+
+// // Detect when the touch moves
+window.addEventListener('touchmove', function(e) {
+    updateMousePosition(e.touches[0]);
+});
+
+// Detect when the touch ends
+window.addEventListener('touchend', function(e) {
+    isFingerDown = false;
 });
 
 // window.addEventListener("click", function(){ console.log("Hello World!"); });
@@ -110,9 +127,16 @@ function gravity(obj) {
     //     obj.Ft.y = force * (dy / distance);
     // console.log(obj.isNew)
     if (obj.isNew){
-        obj.Ft.x = 0
-        obj.Ft.y = 0
-        if (!isMouseDown) {
+        // obj.Ft.x = 0
+        // obj.Ft.y = 0
+        if (!isFingerDown && fingerPressed){
+            fingerPressed = false;
+            obj.isNew = false;
+            newBallLaunched = true;
+            obj.position.y += 2*obj.r;
+            obj.Ft.x = obj.r;
+        }
+        else if (!isMouseDown || isFingerDown) {
             obj.position.x = mousePosition.x;
         }else{
             obj.isNew = false;
