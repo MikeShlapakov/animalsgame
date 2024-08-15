@@ -10,9 +10,9 @@ let fontSize = 20;
 let opacity = 0;
 const maxFontSize = 100;
 
-const g_const = 20;
-const friction = 0.7;
-const density = 5E-4;
+const g_const = 30;
+const friction = 0.8;
+const density = 1E-4;
 
 // Load the background image
 const backgroundImage = new Image();
@@ -47,7 +47,7 @@ const fenceImg = new Image();
 fenceImg.src = './pics/fence.png';
 
 // bottom: canvas.height - 10
-const container = {top: 50, bottom: 0.75* canvas.height, left: 0.15*canvas.width, right: 0.85*canvas.width}
+const container = {top: 50, bottom: 0.8* canvas.height, left: 0.1*canvas.width, right: 0.9*canvas.width}
 
 let maxBallSize = Math.min(container.right - container.left, container.bottom - container.top)
 const ballsImgs = {1: "./pics/img1.png", 2: "./pics/img2.png", 3: "./pics/img3.png", 4: "./pics/img4.png", 5: "./pics/img5.png", 6: "./pics/img6.png", 7: "./pics/img7.png", 8: "./pics/img8.png", 9: "./pics/img9.png", 10: "./pics/img10.png", 11: "./pics/img11.png"}
@@ -101,7 +101,7 @@ function updateMousePosition(event) {
 }
 
 class Circle {
-    constructor(id, x = 500, y = 400, r = 10, m = 0, isNew = false, imgSrc = null, velocity = { x: 0, y: 0 }, Ft = { x: 0, y: 0 }) {
+    constructor(id, x = 500, y = 400, r = 10, m = 0, isNew = false, imgSrc = null, velocity = { x: 0, y: 0 }, Ft = { x: 0, y: 0 }, merged = 10) {
         this.id = id;
         if (this.id == 11){
             palyerWon = true;
@@ -110,6 +110,7 @@ class Circle {
         this.m = this.r;
         this.Ft = Ft;
         // this.color = ballsColors[r];
+        this.rotation = 0; // Rotation angle
         this.position = { x: x, y: y };
         this.velocity = velocity;
         this.terminalVelocity = Math.round(Math.sqrt((2 * this.m * g_const) / (this.r * density)));
@@ -119,7 +120,7 @@ class Circle {
         if (imgSrc) {
             this.image.src = imgSrc;
         }
-
+        this.merged = merged
         totalScore += this.id;
     }
 
@@ -133,6 +134,8 @@ class Circle {
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
 
+        this.rotation += (this.velocity.x * dt) / this.m;
+
         bounce(this);
     }
 
@@ -143,14 +146,24 @@ class Circle {
         // ctx.arc(this.position.x, this.position.y, this.r, 0, Math.PI * 2, true);
         // ctx.closePath();
         // ctx.clip();  // Clip the context to the circle path
-
+        ctx.save(); // Save the current state
+        ctx.translate(this.position.x, this.position.y)
+        ctx.rotate(this.rotation);
         if (this.image && this.image.complete) {
             // console.log(this.position)
-            ctx.drawImage(this.image, this.position.x - this.r -1, this.position.y - this.r - 1, (this.r + 1) * 2, (this.r + 1) * 2);
+            if (this.merged < 4){
+                console.log(this.merged)
+                this.merged+=1
+                ctx.drawImage(this.image, -this.radius , -this.radius, Math.floor((this.r + 1) * this.merged / 10), Math.floor((this.r + 1) * this.merged / 10));
+            }
+            else{
+                ctx.drawImage(this.image, -this.r, -this.r, (this.r + 1) * 2, (this.r + 1) * 2);
+            }
         } else {
             ctx.fillStyle = this.color;
             ctx.fill();
         }
+        ctx.restore(); // Restore the context to its original state
 
         // ctx.restore();  // Restore the context to its original state
     }
@@ -204,7 +217,7 @@ function bounce(obj) {
         obj.velocity.x = -(obj.velocity.x * (1 - friction));
         obj.position.x = obj.position.x - obj.r < container.left ? container.left + obj.r : container.right - obj.r;
     }
-    if (obj.position.y + obj.r < container.top){
+    if (obj.position.y + obj.r < container.top && !obj.isNew){
         // console.log("Lose")
         palyerLose = true;
     }
@@ -253,7 +266,7 @@ function resolveCollision(obj1, obj2) {
         let ballFt = {x: obj1.Ft.x + obj2.Ft.x, y: obj2.Ft.y + obj2.Ft.y};
         let ballV = {x: Math.floor((obj1.velocity.x + obj2.velocity.x)/2), y: Math.floor((obj1.velocity.y + obj2.velocity.y)/2)};
         // do{
-        let newCircle = new Circle(obj1.id + 1, xpos, ypos, obj1.r + 20, obj1.r + 20, false, null, ballV);
+        let newCircle = new Circle(obj1.id + 1, xpos, ypos, obj1.r + 20, obj1.r + 20, false, null, ballV, {x:0, y:0}, 0);
         objects.push(newCircle);
         // }while(!isCircleValid(newCircle, objects))
         // objects.push(newCircle);
@@ -363,12 +376,12 @@ function animate() {
         let attemptCount = 0;
         // console.log(container.left, container.right, (container.left + container.right)/2)
         // randomInt(1,2)
-        let newBall = new Circle(nextBall, (container.left + container.right)/2, 100, 100, 100, true);
+        let newBall = new Circle(nextBall, mousePosition.x, 100, 100, 100, true);
         // console.log(!isCircleValid(newBall, objects))
         while(!isCircleValid(newBall, objects)){
             attemptCount++;
             // console.log(attemptCount)
-            newBall = new Circle(nextBall, (container.left + container.right)/2, 100-attemptCount, 100, 100, true);
+            newBall = new Circle(nextBall, mousePosition.x, 100-attemptCount, 100, 100, true);
         }
         nextBall = randomInt(1,Math.min(3, objects.length))
         objects.push(newBall);
@@ -387,10 +400,34 @@ function animate() {
     // Draw the cropped image on the canvas
     ctx.drawImage(fenceImg, startX, startY, cropWidth, cropHeight, 0, 120, canvas.width, canvas.height);
 
+    for (let obj of objects) {
+        if (!window.pause) {
+            gravity(obj);
+            obj.move(dt)
+        }
+        // console.log(obj)
+        obj.draw();
+    }
+
+    ctx.fillStyle = "#555555"; // Set text color
+    ctx.font = `bold 20px Helvetica`; // Set font and size
+    ctx.fillText(`Score: ${totalScore}`, 20, 25);
+
+    let nextBallImage = new Image();
+    nextBallImage.src = ballsImgs[nextBall];
+    if (nextBallImage && nextBallImage.complete) {
+        
+        // ctx.textAlign = 'center';
+        // ctx.textBaseline = 'middle';
+        ctx.fillText("Next:", 20, 60);
+        ctx.drawImage(nextBallImage, 80, 35, 20*2, 20*2);
+    }
+
     if (palyerWon){
+        window.pause = true;
         ctx.globalAlpha = opacity; // Set opacity
         ctx.fillStyle = "#265136"; // Set text color
-        ctx.font = `bold ${fontSize+4}px Helvetica`; // Set font and size
+        ctx.font = `bold ${fontSize+3}px Helvetica`; // Set font and size
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText("You won!", canvas.width / 2, canvas.height / 5); // Draw the text
@@ -411,7 +448,7 @@ function animate() {
         window.pause = true;
         ctx.globalAlpha = opacity; // Set opacity
         ctx.fillStyle = "#7a0909"; // Set text color
-        ctx.font = `bold ${fontSize+4}px Helvetica`; // Set font and size
+        ctx.font = `bold ${fontSize+3}px Helvetica`; // Set font and size
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText("You Lost", canvas.width / 2, canvas.height / 5); // Draw the text
@@ -426,29 +463,6 @@ function animate() {
         if (opacity < 1) {
             opacity += 0.02;
         }
-    }
-
-    for (let obj of objects) {
-        if (!window.pause) {
-            gravity(obj);
-            obj.move(dt)
-        }
-        // console.log(obj)
-        obj.draw();
-    }
-
-    ctx.fillStyle = "#555555"; // Set text color
-    ctx.font = `bold 20px Helvetica`; // Set font and size
-    ctx.fillText(`Score: ${totalScore}`, 10, 25);
-
-    let nextBallImage = new Image();
-    nextBallImage.src = ballsImgs[nextBall];
-    if (nextBallImage && nextBallImage.complete) {
-        
-        // ctx.textAlign = 'center';
-        // ctx.textBaseline = 'middle';
-        ctx.fillText("Next:", 10, 60);
-        ctx.drawImage(nextBallImage, 70, 35, 20*2, 20*2);
     }
     window.requestAnimationFrame(animate);
 }
