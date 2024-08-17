@@ -39,7 +39,7 @@ backgroundImage.onload = function() {
         startY = (backgroundImage.height - cropHeight) / 2;
     }
 
-    console.log(imgAspectRatio, cropWidth, cropHeight, startX, startY)
+    // console.log(imgAspectRatio, cropWidth, cropHeight, startX, startY)
 };
 
 // Load the background image
@@ -101,13 +101,14 @@ function updateMousePosition(event) {
 }
 
 class Circle {
-    constructor(id, x = 500, y = 400, r = 10, m = 0, isNew = false, imgSrc = null, velocity = { x: 0, y: 0 }, Ft = { x: 0, y: 0 }, merged = 10) {
+    constructor(id, x = 500, y = 400, r = 10, m = 0, isNew = false, imgSrc = null, velocity = { x: 0, y: 0 }, Ft = { x: 0, y: 0 }, merged = false) {
         this.id = id;
         if (this.id == 11){
             palyerWon = true;
         }
-        this.r = 0.4 * this.id/11 * maxBallSize
-        this.m = this.r;
+        this.initialRadius = 0.4 * this.id/11 * maxBallSize; // The final radius the circle should have
+        this.r = merged? 1 : this.initialRadius; // Start with radius 0 for the pop-up effect
+        this.m = this.initialRadius;
         this.Ft = Ft;
         // this.color = ballsColors[r];
         this.rotation = 0; // Rotation angle
@@ -120,7 +121,8 @@ class Circle {
         if (imgSrc) {
             this.image.src = imgSrc;
         }
-        this.merged = merged
+        this.isAnimating = true; // Track if the circle is animating
+        this.animationSpeed = this.initialRadius / 4; // Speed at which the circle grows
         totalScore += this.id;
     }
 
@@ -133,15 +135,13 @@ class Circle {
       
         this.position.x += this.velocity.x * dt;
         this.position.y += this.velocity.y * dt;
-
-        this.rotation += (this.velocity.x * dt) / this.m;
-
+        
         bounce(this);
+        
+        this.rotation += Math.round(this.velocity.x) ? (this.velocity.x * dt) / this.m : 0;
     }
 
     draw() {
-        // ctx.save();  // Save the current context state
-
         // ctx.beginPath();
         // ctx.arc(this.position.x, this.position.y, this.r, 0, Math.PI * 2, true);
         // ctx.closePath();
@@ -149,16 +149,18 @@ class Circle {
         ctx.save(); // Save the current state
         ctx.translate(this.position.x, this.position.y)
         ctx.rotate(this.rotation);
+
+        // Animate the circle's radius
+        if (this.isAnimating) {
+            if (this.r < this.initialRadius) {
+                this.r += this.animationSpeed;
+            } else {
+                this.r = this.initialRadius;
+                this.isAnimating = false; // Stop animating once the circle reaches its full size
+            }
+        }
         if (this.image && this.image.complete) {
-            // console.log(this.position)
-            if (this.merged < 4){
-                console.log(this.merged)
-                this.merged+=1
-                ctx.drawImage(this.image, -this.radius , -this.radius, Math.floor((this.r + 1) * this.merged / 10), Math.floor((this.r + 1) * this.merged / 10));
-            }
-            else{
-                ctx.drawImage(this.image, -this.r, -this.r, (this.r + 1) * 2, (this.r + 1) * 2);
-            }
+            ctx.drawImage(this.image, -this.r, -this.r, (this.r + 1) * 2, (this.r + 1) * 2);
         } else {
             ctx.fillStyle = this.color;
             ctx.fill();
@@ -250,9 +252,6 @@ function distance(obj1, obj2) {
 function resolveCollision(obj1, obj2) {
 
     if (obj1.r == obj2.r && !obj1.isNew && !obj2.isNew){
-        if (obj1.isNew || obj2.isNew){
-            console.log("TADAAA", obj1.isNew, obj2.isNew)
-        }
         let index = objects.indexOf(obj1);
         if (index > -1) { // only splice array when item is found
             objects.splice(index, 1); // 2nd parameter means remove one item only
@@ -266,13 +265,13 @@ function resolveCollision(obj1, obj2) {
         let ballFt = {x: obj1.Ft.x + obj2.Ft.x, y: obj2.Ft.y + obj2.Ft.y};
         let ballV = {x: Math.floor((obj1.velocity.x + obj2.velocity.x)/2), y: Math.floor((obj1.velocity.y + obj2.velocity.y)/2)};
         // do{
-        let newCircle = new Circle(obj1.id + 1, xpos, ypos, obj1.r + 20, obj1.r + 20, false, null, ballV, {x:0, y:0}, 0);
+        let newCircle = new Circle(obj1.id + 1, xpos, ypos, obj1.r + 20, obj1.r + 20, false, null, ballV, {x:0, y:0}, true);
         objects.push(newCircle);
         // }while(!isCircleValid(newCircle, objects))
         // objects.push(newCircle);
         // palyerWon = true;
     }
-    const coefficientOfRestitution = 1- friction;
+    let coefficientOfRestitution = 1 - friction;
   
     // Calculate the relative velocity
     const relativeVelocity = {
